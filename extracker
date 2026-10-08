@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Expense Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef3f1;--panel:#ffffff;--ink:#12302b;--muted:#5d7a74;--line:#d5e0dc;--accent:#0f6b5c;--accent-ink:#ffffff;--warn:#b4452d;
+  --c1:#0f6b5c;--c2:#e0a526;--c3:#3b6fb6;--c4:#c25b7a;--c5:#7a8f3c;--c6:#8a6bbf;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1a18;--panel:#162623;--ink:#e3f0ec;--muted:#8fb0a9;--line:#27403b;--accent:#4fc2ab;--accent-ink:#06211c;--warn:#f08a70;
+  --c1:#4fc2ab;--c2:#f0c04a;--c3:#6fa0e6;--c4:#e585a3;--c5:#a6bd62;--c6:#b296e6;}}
+:root[data-theme="dark"]{
+  --bg:#0e1a18;--panel:#162623;--ink:#e3f0ec;--muted:#8fb0a9;--line:#27403b;--accent:#4fc2ab;--accent-ink:#06211c;--warn:#f08a70;
+  --c1:#4fc2ab;--c2:#f0c04a;--c3:#6fa0e6;--c4:#e585a3;--c5:#a6bd62;--c6:#b296e6;}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
+main{max-width:980px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+h1{font-size:1.1rem;font-weight:600;margin:0}
+select,input,button{font:inherit;color:inherit}
+select,input{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.month{width:auto}
+.total{margin:8px 0 22px}
+.total small{color:var(--muted);font-size:.95rem}
+.total strong{display:block;font-size:clamp(2.8rem,10vw,4.6rem);font-weight:800;letter-spacing:-.03em;line-height:1.05}
+.total span{color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:800px){.grid{grid-template-columns:340px 1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+h2{font-size:1rem;font-weight:600;margin:0 0 12px}
+form{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:12px;font-weight:600;cursor:pointer}
+.err{color:var(--warn);font-size:.85rem;min-height:1.2em;margin:0}
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line);margin-bottom:14px}
+.bar i{display:block;height:100%}
+.cat{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:.95rem}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.cat .n{flex:1}.cat .p{color:var(--muted);font-size:.85rem}
+.list{margin-top:16px}
+.item{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item .t{font-weight:600}.item .s{color:var(--muted);font-size:.85rem}
+.amt{font-weight:600;font-variant-numeric:tabular-nums}
+.del{background:none;border:0;color:var(--muted);cursor:pointer;font-size:1.2rem;padding:4px 8px;border-radius:8px}
+.del:hover{color:var(--warn)}
+.empty{color:var(--muted);padding:12px 0}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Expense tracker</h1>
+    <select id="month" class="month" aria-label="Month"></select>
+  </header>
+
+  <section class="total">
+    <small id="mlabel"></small>
+    <strong id="total">₹0</strong>
+    <span id="count"></span>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Add expense</h2>
+      <form id="f" novalidate>
+        <label>Amount (₹)<input id="amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="250"></label>
+        <div class="row">
+          <label>Category<select id="cat"></select></label>
+          <label>Date<input id="date" type="date"></label>
+        </div>
+        <label>Note<input id="note" type="text" maxlength="60" placeholder="Lunch at canteen"></label>
+        <p class="err" id="err" role="alert"></p>
+        <button class="btn" type="submit">Add expense</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Where your money went</h2>
+      <div class="bar" id="bar"></div>
+      <div id="cats"></div>
+      <div class="list" id="list"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const CATS=["Food","Transport","Bills","Shopping","Health","Other"];
+const COLORS=["--c1","--c2","--c3","--c4","--c5","--c6"];
+const KEY="expenses-v1";
+let items=[];
+try{items=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){items=[]}
+const $=id=>document.getElementById(id);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}};
+const inr=n=>"₹"+Number(n).toLocaleString("en-IN",{maximumFractionDigits:2});
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const mname=m=>new Date(m+"-01T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+
+$("cat").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
+$("date").value=today();
+
+function months(){
+  const set=new Set(items.map(i=>i.date.slice(0,7)));set.add(today().slice(0,7));
+  return [...set].sort().reverse();
+}
+function fillMonths(keep){
+  const ms=months();
+  $("month").innerHTML=ms.map(m=>`<option value="${m}">${mname(m)}</option>`).join("");
+  $("month").value=ms.includes(keep)?keep:ms[0];
+}
+function render(){
+  const m=$("month").value;
+  const rows=items.filter(i=>i.date.startsWith(m)).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  const total=rows.reduce((s,i)=>s+i.amount,0);
+  $("mlabel").textContent="Spent in "+mname(m);
+  $("total").textContent=inr(total);
+  $("count").textContent=rows.length?rows.length+(rows.length===1?" expense":" expenses"):"";
+  const by=CATS.map((c,k)=>({c,k,v:rows.filter(i=>i.cat===c).reduce((s,i)=>s+i.amount,0)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  $("bar").innerHTML=by.map(x=>`<i style="width:${x.v/total*100}%;background:var(${COLORS[x.k]})" title="${x.c}"></i>`).join("");
+  $("cats").innerHTML=by.length?by.map(x=>`<div class="cat"><span class="dot" style="background:var(${COLORS[x.k]})"></span><span class="n">${x.c}</span><span class="p">${Math.round(x.v/total*100)}%</span><span class="amt">${inr(x.v)}</span></div>`).join(""):`<p class="empty">Nothing here yet. Add your first expense for this month.</p>`;
+  $("list").innerHTML=rows.map(i=>`<div class="item"><span class="dot" style="background:var(${COLORS[CATS.indexOf(i.cat)]})"></span><div><div class="t">${esc(i.note||i.cat)}</div><div class="s">${i.cat} · ${new Date(i.date+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"})}</div></div><span class="amt">${inr(i.amount)}</span><button class="del" data-id="${i.id}" aria-label="Delete expense">×</button></div>`).join("");
+}
+$("f").addEventListener("submit",e=>{
+  e.preventDefault();
+  const amount=parseFloat($("amount").value),date=$("date").value;
+  if(!(amount>0)){$("err").textContent="Enter an amount greater than 0.";return}
+  if(!date){$("err").textContent="Pick a date.";return}
+  $("err").textContent="";
+  items.push({id:Date.now(),amount,cat:$("cat").value,date,note:$("note").value.trim()});
+  save();fillMonths(date.slice(0,7));render();
+  $("amount").value="";$("note").value="";$("amount").focus();
+});
+$("list").addEventListener("click",e=>{
+  const b=e.target.closest(".del");if(!b)return;
+  items=items.filter(i=>String(i.id)!==b.dataset.id);
+  save();fillMonths($("month").value);render();
+});
+$("month").addEventListener("change",render);
+fillMonths(today().slice(0,7));render();
+</script>
+</body>
+</html>
